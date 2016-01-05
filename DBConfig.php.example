@@ -1,0 +1,10 @@
+<?php
+
+abstract class DBConfig {
+	protected $serv   = 'db';
+	protected $user   = '';
+	protected $pass   = '';
+	protected $base   = '';
+}
+
+?>
