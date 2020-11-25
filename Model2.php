@@ -15,38 +15,38 @@ class Model extends Database {
 	// get fieldinfo
 	public function getFields() {
 		$res = $this->doQuery('SHOW COLUMNS FROM `%s`', array($this->table));
-		if (!$res || mysql_error()) die("SHOW COLUMNS failed please check table '$this->table' exists");
-		while ($field = mysql_fetch_array($res, MYSQL_ASSOC)) {
+		if (!$res || mysqli_error($this->con)) die("SHOW COLUMNS failed please check table '$this->table' exists");
+		while ($field = mysqli_fetch_array($res, MYSQL_ASSOC)) {
 			$this->_addField($field);
 		}
 	}
 	
 	
 	// Identify field and save info to object
-  private function _addField($field) {
-    // parse and identify type
-    $type = $field['Type'];
-    if (is_int(strpos($type, '('))) {
-      $type = explode('(', $type);
-      $fieldInfo['type'] = $type[0];
-      switch ($fieldInfo['type']) {
-        case 'enum':
-          $type[1] = array_shift(explode(')', $type[1]));
-          $type[1] = str_replace("'", '', $type[1]);
-          $fieldInfo['enum'] = explode(",", $type[1]);
-          break;
-        default:
-          $fieldInfo['length'] = $type[1];
-      }
-    } else {
-      $fieldInfo['type'] = $type;
+    private function _addField($field) {
+	    // parse and identify type
+	    $type = $field['Type'];
+	    if (is_int(strpos($type, '('))) {
+	        $type = explode('(', $type);
+            $fieldInfo['type'] = $type[0];
+            switch ($fieldInfo['type']) {
+                case 'enum':
+                    $type[1] = array_shift(explode(')', $type[1]));
+                    $type[1] = str_replace("'", '', $type[1]);
+                    $fieldInfo['enum'] = explode(",", $type[1]);
+                    break;
+                default:
+                    $fieldInfo['length'] = $type[1];
+            }
+        } else {
+            $fieldInfo['type'] = $type;
+        }
+		
+        // save colected data to object
+		$fieldInfo['name'] = $field['Field'];
+		if ($field['Key'] == 'PRI') $this->pk = $fieldInfo['name'];
+		else $this->{"field_{$fieldInfo['name']}"} = $fieldInfo;
     }
-
-    // save colected data to object
-    $fieldInfo['name'] = $field['Field'];
-    if ($field['Key'] == 'PRI') $this->pk = $fieldInfo['name'];
-    else $this->{"field_{$fieldInfo['name']}"} = $fieldInfo;
-  }
 	
 	
 	
@@ -74,9 +74,9 @@ class Model extends Database {
 		$qry     = "SELECT * FROM `%s` $qry";
         $param   = array_merge((array)$this->table, $param);
         $res = $this->doQuery($qry, $param);
-        if (!$res || mysql_error()) return false;
+        if (!$res || mysqli_error()) return false;
         $rows = array();
-        while ($row = mysql_fetch_array($res, MYSQL_ASSOC)) {
+        while ($row = mysqli_fetch_array($res, MYSQL_ASSOC)) {
             $rows[] = $row;
         }
         return $rows;
@@ -123,8 +123,8 @@ class Model extends Database {
 		
 		// do it
 		$this->doQuery($qry, $param);
-		if (mysql_error()) return -1;
-		return isset($this->{$this->pk}) ? mysql_affected_rows() : $this->getLastInsertId();
+		if (mysqli_error()) return -1;
+		return isset($this->{$this->pk}) ? mysqli_affected_rows() : $this->getLastInsertId();
 	}
 	
 	
@@ -136,8 +136,8 @@ class Model extends Database {
 		$param[] = $this->pk;
 		$param[] = $id;
 		$this->doQuery($qry, $param);
-		if (mysql_error()) return false;
-		return (mysql_affected_rows() > 0) ? true : false;
+		if (mysqli_error()) return false;
+		return (mysqli_affected_rows() > 0) ? true : false;
 	}
 	
 	

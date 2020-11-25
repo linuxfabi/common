@@ -15,8 +15,12 @@ abstract class Database extends DBConfig {
 	
 	
 	protected function connect() {
+	  // mysql_pconnect is marked as deprecated
+	  // This could solve future problems
+	  //mysqli_connect($this->serv, $this->user, $this->pass, $this->base);
 		$this->con = mysql_pconnect($this->serv, $this->user, $this->pass);
 		if ($this->con) mysql_select_db($this->base, $this->con);
+		else die(mysql_error);
 	}
 	
 	protected function doQuery($qry, $paramList=array()) {
